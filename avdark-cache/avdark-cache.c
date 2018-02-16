@@ -152,7 +152,7 @@ void
 avdc_flush_cache(avdark_cache_t *self)
 {
         /* TODO: Update this function */
-        for (int i = 0; i < self->number_of_sets; i++) {
+        for (int i = 0; i < self->number_of_sets*self->assoc; i++) {
                 self->lines[i].valid = 0;
                 self->lines[i].tag = 0;
         }
