@@ -223,12 +223,15 @@ avdc_print_internals(avdark_cache_t *self)
         fprintf(stderr, "size: %d, assoc: %d, line-size: %d\n",
                 self->size, self->assoc, self->block_size);
 
-        for (i = 0; i < self->number_of_sets; i++)
-                fprintf(stderr, "tag: <0x%.16lx> valid: %d\n",
-                        (long unsigned int)self->lines[i].tag,
-                        self->lines[i].valid);
+        for (i = 0; i < self->number_of_sets->; i++){
+            for (int j=0; j < self->assoc; j++) {
+                fprintf(stderr, "tag: <0x%.16lx> valid: %d \t \t",
+                        (long unsigned int)self->lines[i+j].tag,
+                        self->lines[i+j].valid);
+            }
+            fprintf("\n");
+        }
 }
-
 void
 avdc_reset_statistics(avdark_cache_t *self)
 {
