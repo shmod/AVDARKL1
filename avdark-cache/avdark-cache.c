@@ -122,11 +122,15 @@ avdc_access(avdark_cache_t *self, avdc_pa_t pa, avdc_access_type_t type)
         avdc_tag_t tag = tag_from_pa(self, pa);
         int index = index_from_pa(self, pa);
         int hit;
-
-        hit = self->lines[index].valid && self->lines[index].tag == tag;
-        if (!hit) {
-                self->lines[index].valid = 1;
-                self->lines[index].tag = tag;
+        int i = 0;
+        for (i; i<self->assoc; i++) {
+            if (hit = self->lines[2*index+i].valid && self->lines[2*index+1].tag == tag) {
+                break;
+            }
+        }
+        if (!hit) { //IMPLEMENT LRU
+                self->lines[2*index].valid = 1;
+                self->lines[2*index].tag = tag;
         }
 
         switch (type) {
