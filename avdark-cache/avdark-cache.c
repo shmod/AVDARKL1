@@ -217,19 +217,19 @@ avdc_print_info(avdark_cache_t *self)
 void
 avdc_print_internals(avdark_cache_t *self)
 {
-        int i;
+        int i,j;
 
         fprintf(stderr, "Cache Internals\n");
         fprintf(stderr, "size: %d, assoc: %d, line-size: %d\n",
                 self->size, self->assoc, self->block_size);
 
-        for (i = 0; i < self->number_of_sets->; i++){
-            for (int j=0; j < self->assoc; j++) {
+        for (i = 0; i < self->number_of_sets; i++){
+            for (j=0; j < self->assoc; j++) {
                 fprintf(stderr, "tag: <0x%.16lx> valid: %d \t \t",
                         (long unsigned int)self->lines[i+j].tag,
                         self->lines[i+j].valid);
             }
-            fprintf("\n");
+            fprintf(stderr,"\n");
         }
 }
 void
