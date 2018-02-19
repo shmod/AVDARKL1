@@ -44,6 +44,7 @@
 struct avdc_cache_line {
         avdc_tag_t tag;
         int        valid;
+	int 	history;
 };
 
 /**
@@ -129,8 +130,18 @@ avdc_access(avdark_cache_t *self, avdc_pa_t pa, avdc_access_type_t type)
             }
         }
         if (!hit) { //IMPLEMENT LRU
-                self->lines[2*index].valid = 1;
-                self->lines[2*index].tag = tag;
+		if (self->lines[2*index].history == 1){
+			i = 0;
+			self->lines[2*index+1].history = 1;
+		}
+		else {
+			i = 1;
+			self->lines[2*index].history = 1;
+		}
+		
+		self->lines[2*index+i].history = 0;
+                self->lines[2*index+i].valid = 1;
+                self->lines[2*index+i].tag = tag;
         }
 
         switch (type) {
@@ -159,6 +170,7 @@ avdc_flush_cache(avdark_cache_t *self)
         for (int i = 0; i < self->number_of_sets*self->assoc; i++) {
                 self->lines[i].valid = 0;
                 self->lines[i].tag = 0;
+		self->lines[i].history = 0;
         }
 }
 
