@@ -125,23 +125,23 @@ avdc_access(avdark_cache_t *self, avdc_pa_t pa, avdc_access_type_t type)
         int hit;
         int i = 0;
         for (i; i<self->assoc; i++) {
-            if (hit = self->lines[2*index+i].valid && self->lines[2*index+1].tag == tag) {
+            if (hit = self->lines[self->assoc*index+i].valid && self->lines[self->assoc*index+1].tag == tag) {
                 break;
             }
         }
         if (!hit) { //IMPLEMENT LRU
-		if (self->lines[2*index].history == 1){
+		if (self->lines[self->assoc*index].history == 1){
 			i = 0;
-			self->lines[2*index+1].history = 1;
+			self->lines[self->assoc*index+1].history = 1;
 		}
 		else {
 			i = 1;
-			self->lines[2*index].history = 1;
+			self->lines[self->assoc*index].history = 1;
 		}
 		
-		self->lines[2*index+i].history = 0;
-                self->lines[2*index+i].valid = 1;
-                self->lines[2*index+i].tag = tag;
+		self->lines[self->assoc*index+i].history = 0;
+                self->lines[self->assoc*index+i].valid = 1;
+                self->lines[self->assoc*index+i].tag = tag;
         }
 
         switch (type) {
