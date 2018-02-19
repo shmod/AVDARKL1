@@ -44,6 +44,7 @@
 struct avdc_cache_line {
         avdc_tag_t tag;
         int        valid;
+	int 	history; //keep track of use history
 };
 
 /**
@@ -114,23 +115,65 @@ avdc_dbg_log(avdark_cache_t *self, const char *msg, ...)
         }
 }
 
+// Help function updates the use history of all the cachelines in a set in the case of a miss. 
+//Also returns the location of the LRU-cacheline
+static int
+increment_at_miss(avdark_cache_t *self, int index){
+	int i;
+	int max = -1;
+	int assoc = self->assoc;
+	int maxIndex;
+
+	for(i = 0; i<assoc; i++) {
+		if (max < self->lines[assoc * index + i].history){
+			max = self->lines[assoc * index + i].history;
+			maxIndex = i;
+		}
+		self->lines[assoc * index + i].history ++;
+	}
+	self->lines[assoc * index + maxIndex].history=0;
+
+	return maxIndex;
+}
+
+
+// Help function updates the use history of all the cachelines in a set in the case of a hit. 
+void
+increment_at_hit(avdark_cache_t *self, int index, int hitIndex){
+
+	int i;
+	int assoc = self->assoc;
+	
+	for(i=0; i<assoc; i++){
+		if (self->lines[index*assoc+i].history < self->lines[index*assoc+hitIndex].history) {
+			self->lines[index*assoc+i].history++;
+		}
+	}
+	self->lines[index*assoc+hitIndex].history == 0;
+}
+
 
 void
 avdc_access(avdark_cache_t *self, avdc_pa_t pa, avdc_access_type_t type)
 {
-        /* TODO: Update this function */
+       
         avdc_tag_t tag = tag_from_pa(self, pa);
         int index = index_from_pa(self, pa);
-        int hit;
+        int hit = 0;
+	int assoc = self->assoc; // store in variable for frequent use
         int i = 0;
-        for (i; i<self->assoc; i++) {
-            if (hit = self->lines[2*index+i].valid && self->lines[2*index+1].tag == tag) {
+        for (i; i<assoc; i++) {
+            if (self->lines[assoc*index+i].valid && self->lines[assoc*index+i].tag == tag) {
+		hit = 1;
+		increment_at_hit(self,index,i);
                 break;
             }
         }
-        if (!hit) { //IMPLEMENT LRU
-                self->lines[2*index].valid = 1;
-                self->lines[2*index].tag = tag;
+        if (!hit) {
+		i = increment_at_miss(self,index);
+		
+                self->lines[assoc*index+i].valid = 1;
+                self->lines[assoc*index+i].tag = tag;
         }
 
         switch (type) {
@@ -155,10 +198,10 @@ avdc_access(avdark_cache_t *self, avdc_pa_t pa, avdc_access_type_t type)
 void
 avdc_flush_cache(avdark_cache_t *self)
 {
-        /* TODO: Update this function */
         for (int i = 0; i < self->number_of_sets*self->assoc; i++) {
                 self->lines[i].valid = 0;
                 self->lines[i].tag = 0;
+		self->lines[i].history = 0; // set use history to 0
         }
 }
 
@@ -167,7 +210,6 @@ int
 avdc_resize(avdark_cache_t *self,
             avdc_size_t size, avdc_block_size_t block_size, avdc_assoc_t assoc)
 {
-		/* TODO: Update this function */
         /* HINT: This function precomputes some common values and
          * allocates the self->lines array. You will need to update
          * this to reflect any changes to how this array is supposed
